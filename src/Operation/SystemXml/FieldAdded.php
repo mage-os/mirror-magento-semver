@@ -25,7 +25,7 @@ class FieldAdded extends AbstractOperation
     /**
      * @var int
      */
-    protected $level = Level::MINOR;
+    protected $level = Level::PATCH;
 
     /**
      * @var string
