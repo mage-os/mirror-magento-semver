@@ -113,10 +113,10 @@ class CompareSourceCommandSystemXmlTest extends AbstractTestCase
                 $pathToFixtures . '/field-added/source-code-before',
                 $pathToFixtures . '/field-added/source-code-after',
                 [
-                    'Suggested semantic versioning change: MINOR',
+                    'Suggested semantic versioning change: PATCH',
                     'Magento/TestModule/etc/adminhtml/system.xml:0 | magento_testmodule/general/added_field | A field-node was added | M302',
                 ],
-                'Minor change is detected.',
+                'Patch change is detected.',
             ],
             'field-removed'   => [
                 $pathToFixtures . '/field-removed/source-code-before',
