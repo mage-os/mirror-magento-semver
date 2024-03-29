@@ -126,7 +126,9 @@ class ReportBuilder
         // Customize severity level of some @api changes
         LevelMapping::setOverrides(
             [
-                'V015' => Level::MINOR, // Add public method
+                'V006' => Level::PATCH, // Add public method
+                'V007' => Level::PATCH, // Add protected method
+                'V015' => Level::PATCH, // Add public method
                 'V016' => Level::PATCH, // Add protected method
                 'V019' => Level::MINOR, // Add public property
                 'V020' => Level::MINOR, // Add protected property
