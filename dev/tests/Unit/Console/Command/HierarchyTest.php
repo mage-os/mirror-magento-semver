@@ -47,9 +47,9 @@ class HierarchyTest extends AbstractTestCase
                 $pathToFixtures . '/public-method-removed-from-non-api-parent-class-extended-by-api-class/source-code-before',
                 $pathToFixtures . '/public-method-removed-from-non-api-parent-class-extended-by-api-class/source-code-after',
                 [
-                    'Suggested semantic versioning change: MAJOR',
+                    'Suggested semantic versioning change: PATCH',
                 ],
-                'Major change is detected.',
+                'Patch change is detected.',
             ],
             'public-method-removed-from-non-api-trait-used-by-api-class'   => [
                 $pathToFixtures . '/public-method-removed-from-non-api-trait-used-by-api-class/source-code-before',

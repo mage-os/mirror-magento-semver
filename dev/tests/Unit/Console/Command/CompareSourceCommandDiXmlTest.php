@@ -83,41 +83,41 @@ class CompareSourceCommandDiXmlTest extends AbstractTestCaseWithRegExp
                 $pathToFixtures . '/moved-to-specific/source-code-before',
                 $pathToFixtures . '/moved-to-specific/source-code-after',
                 [
-                    '#Suggested semantic versioning change: MAJOR#',
-                    '#MAJOR\s*\|\s' . '[\w/]+'  . '/moved-to-specific/source-code-before/Magento/TestModule/etc/di\.xml:0#',
+                    '#Suggested semantic versioning change: PATCH#',
+                    '#PATCH\s*\|\s' . '[\w/]+'  . '/moved-to-specific/source-code-before/Magento/TestModule/etc/di\.xml:0#',
                     '#scope\s*\|\s*Virtual Type was changed\s*\|\s*M201#'
                 ],
-                'Major change is detected.',
+                'Patch change is detected.',
             ],
             'remove-type' => [
                 $pathToFixtures . '/remove-type/source-code-before',
                 $pathToFixtures . '/remove-type/source-code-after',
                 [
-                    '#Suggested semantic versioning change: MAJOR#',
-                    '#MAJOR\s*\|\s' . '[\w/]+' . 'remove-type/source-code-before/Magento/TestModule/etc/di\.xml:0#',
+                    '#Suggested semantic versioning change: PATCH#',
+                    '#PATCH\s*\|\s' . '[\w/]+' . 'remove-type/source-code-before/Magento/TestModule/etc/di\.xml:0#',
                     '#customCacheInstance2\s*\|\s*Virtual Type was removed\s*\|\s*M200\s*#'
                 ],
-                'Major change is detected.',
+                'Patch change is detected.',
             ],
             'change-type' => [
                 $pathToFixtures . '/change-type/source-code-before',
                 $pathToFixtures . '/change-type/source-code-after',
                 [
-                    '#Suggested semantic versioning change: MAJOR#',
-                    '#MAJOR\s*\|\s' . '[\w/]+' . '/change-type/source-code-before/Magento/TestModule/etc/di\.xml:0#',
+                    '#Suggested semantic versioning change: PATCH#',
+                    '#PATCH\s*\|\s' . '[\w/]+' . '/change-type/source-code-before/Magento/TestModule/etc/di\.xml:0#',
                     '#type\s*\|\s*Virtual Type was changed\s*\|\s*M201#'
                 ],
-                'Major change is detected.',
+                'Patch change is detected.',
             ],
             'change-name' => [
                 $pathToFixtures . '/change-name/source-code-before',
                 $pathToFixtures . '/change-name/source-code-after',
                 [
-                    '#Suggested semantic versioning change: MAJOR#',
-                    '#MAJOR\s*\|\s*' . '[\w/]+' . '/change-name/source-code-before/Magento/TestModule/etc/di\.xml:0#',
+                    '#Suggested semantic versioning change: PATCH#',
+                    '#PATCH\s*\|\s*' . '[\w/]+' . '/change-name/source-code-before/Magento/TestModule/etc/di\.xml:0#',
                     '#cacheInstance\s*\|\s*Virtual Type was removed\s*\|\s*M200#'
                 ],
-                'Major change is detected.',
+                'Patch change is detected.',
             ],
             'removing-leading-slash-from-type' => [
                 $pathToFixtures . '/removing-leading-slash-from-type/source-code-before',
