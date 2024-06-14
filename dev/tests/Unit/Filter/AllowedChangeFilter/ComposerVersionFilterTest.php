@@ -51,7 +51,7 @@ class ComposerVersionFilterTest extends TestCase
      *
      * @return array
      */
-    public function filterDataProvider()
+    public static function filterDataProvider()
     {
         return [
             ['package_version_name_matches', 'version', false],
