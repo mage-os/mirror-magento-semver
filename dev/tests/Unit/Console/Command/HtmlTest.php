@@ -63,7 +63,7 @@ class HtmlTest extends AbstractHtmlTestCaseForHtml
         );
     }
 
-    public function changesDataProvider()
+    public static function changesDataProvider()
     {
         $pathToFixtures = __DIR__ . '/CompareSourceCommandTest/_files/all';
 

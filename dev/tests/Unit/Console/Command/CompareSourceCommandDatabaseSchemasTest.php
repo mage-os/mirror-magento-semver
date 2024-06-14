@@ -48,7 +48,7 @@ class CompareSourceCommandDatabaseSchemasTest extends AbstractTestCaseWithRegExp
     /**
      * @return array
      */
-    public function changesDataProvider()
+    public static function changesDataProvider()
     {
         $pathToFixtures = __DIR__ . '/CompareSourceCommandTest/_files/db_schema';
         return [
