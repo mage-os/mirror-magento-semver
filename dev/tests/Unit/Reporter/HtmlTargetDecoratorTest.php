@@ -23,7 +23,7 @@ class HtmlTargetDecoratorTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function dataProviderTestUrl()
+    public static function dataProviderTestUrl()
     {
         return [
             'target-context-class' => [

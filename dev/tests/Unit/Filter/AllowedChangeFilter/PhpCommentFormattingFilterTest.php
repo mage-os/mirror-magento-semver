@@ -50,7 +50,7 @@ class PhpCommentFormattingFilterTest extends TestCase
      *
      * @return array
      */
-    public function filterDataProvider()
+    public static function filterDataProvider()
     {
         return [
             ['condensed_comments_match', false],

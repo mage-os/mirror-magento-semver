@@ -53,7 +53,7 @@ class PhpIgnoredTagFilterTest extends TestCase
      *
      * @return array
      */
-    public function filterDataProvider()
+    public static function filterDataProvider()
     {
         return [
             ['add_ignored_tag_only_comment', ['ignored'], [], true, false],
