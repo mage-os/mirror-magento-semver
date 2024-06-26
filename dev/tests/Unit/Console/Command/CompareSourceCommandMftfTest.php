@@ -80,7 +80,7 @@ class CompareSourceCommandMftfTest extends AbstractTestCase
         return $commandTester;
     }
 
-    public function changesDataProvider()
+    public static function changesDataProvider()
     {
         $pathToFixtures = __DIR__ . '/CompareSourceCommandTest/_files/mftf';
         return [

@@ -503,7 +503,7 @@ class EntityTest extends TestCase
      *
      * @return array
      */
-    public function dataProviderIsClass()
+    public static function dataProviderIsClass()
     {
         return [
             'entity-is-class-returns-true'      => [
@@ -530,7 +530,7 @@ class EntityTest extends TestCase
      *
      * @return array
      */
-    public function dataProviderIsInterface()
+    public static function dataProviderIsInterface()
     {
         return [
             'entity-is-class-returns-false'     => [
@@ -557,7 +557,7 @@ class EntityTest extends TestCase
      *
      * @return array
      */
-    public function dataProviderIsTrait()
+    public static function dataProviderIsTrait()
     {
         return [
             'entity-is-class-returns-false'     => [
