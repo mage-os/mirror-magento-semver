@@ -29,7 +29,7 @@ class VirtualTypeChanged extends Operation
      *
      * @var int
      */
-    protected $level = Level::PATCH;
+    protected $level = Level::MAJOR;
 
     /**
      * Operation message.
