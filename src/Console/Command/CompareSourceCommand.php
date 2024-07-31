@@ -151,6 +151,10 @@ class CompareSourceCommand extends Command
         $versionReport = $semanticVersionChecker->loadVersionReport();
         $changedFiles = $semanticVersionChecker->loadChangedFiles();
 
+        if ($this->areFilesPresentLocally($changedFiles, $sourceAfterDir)) {
+            $versionIncrease =Level::PATCH; // Set to "Patch"
+            $versionIncWord = strtoupper($this->changeLevels[$versionIncrease]);
+        }
         foreach ($changedFiles as &$file) {
             if (substr($file, 0, strlen($sourceBeforeDir)) == $sourceBeforeDir) {
                 $file = substr($file, strlen($sourceBeforeDir));
@@ -235,6 +239,24 @@ class CompareSourceCommand extends Command
             return self::FAILURE_EXIT_CODE;
         }
         return self::SUCCESS_EXIT_CODE;
+    }
+
+    /**
+     * Method to check if file exist.
+     *
+     * @param array $changedFiles
+     * @param string $sourceAfterDir
+     * @return bool
+     */
+    private function areFilesPresentLocally(array $changedFiles, string $sourceAfterDir): bool
+    {
+        foreach ($changedFiles as $file) {
+            $localFilePath = $sourceAfterDir;
+            if (file_exists($localFilePath)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
