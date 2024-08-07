@@ -13,6 +13,7 @@ use Magento\SemanticVersionChecker\Analyzer\AnalyzerInterface;
 use Magento\SemanticVersionChecker\Node\VirtualType;
 use Magento\SemanticVersionChecker\Operation\DiXml\VirtualTypeChanged;
 use Magento\SemanticVersionChecker\Operation\DiXml\VirtualTypeRemoved;
+use Magento\SemanticVersionChecker\Operation\DiXml\VirtualTypeToTypeChanged;
 use Magento\SemanticVersionChecker\Registry\XmlRegistry;
 use PHPSemVerChecker\Registry\Registry;
 use PHPSemVerChecker\Report\Report;
@@ -60,7 +61,7 @@ class VirtualTypeAnalyzer implements AnalyzerInterface
             foreach ($moduleNodes as $name => $nodeBefore) {
                 // search nodesAfter the by name
                 $nodeAfter = $nodesAfter[$moduleName][$name] ?? false;
-
+                $fileAfter = $registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName];
                 if ($nodeAfter !== false && $nodeBefore !== $nodeAfter) {
                     /* @var VirtualType $nodeAfter */
                     $this->triggerNodeChange($nodeBefore, $nodeAfter, $fileBefore);
@@ -78,13 +79,67 @@ class VirtualTypeAnalyzer implements AnalyzerInterface
                     }
                 }
 
-                $operation = new VirtualTypeRemoved($fileBefore, $name);
+                $finalPath = $this->convertClassNameToFilePath($fileAfter, $name, '.php');
+
+                if (file_exists($finalPath)) {
+                    $operation = new VirtualTypeToTypeChanged($fileBefore, $name);
+                } else {
+                    $operation = new VirtualTypeRemoved($fileBefore, $name);
+                }
                 $this->report->add('di', $operation);
             }
         }
 
         return $this->report;
     }
+
+    /**
+     *  Method to convert class name to file path
+     *
+     * @param string $filePath
+     * @param string $className
+     * @param string $extraString
+     * @return string
+     */
+    private function convertClassNameToFilePath($filePath, $className, $extraString = ''): string
+    {
+        // Split the initial file path to get the base directory.
+        $parts = explode('/', $filePath);
+        $classParts = explode('\\', $className);
+
+        // Find the common part between the file path and class name.
+        $baseDirParts = [];
+        foreach ($parts as $part) {
+            $baseDirParts[] = $part;
+
+            if (in_array($part, $classParts)) {
+                break;
+            }
+        }
+
+        // Reconstruct the base directory path.
+        $baseDir = implode('/', $baseDirParts);
+
+        // Replace namespace separators with directory separators in the class name.
+        $classFilePath = str_replace('\\', '/', $className);
+
+        $position = strpos($classFilePath, "/");
+
+        if ($position !== false) {
+            $classFilePath = substr($classFilePath, $position);
+        }
+
+        // Combine the base directory and class file path.
+        $fullPath = rtrim($baseDir, '/')  . $classFilePath;
+
+
+        // Append the extra string if provided.
+        if ($extraString) {
+            $fullPath .= $extraString;
+        }
+        return $fullPath;
+    }
+
 
     /**
      * Return a filtered node list from type {@link VirtualType}

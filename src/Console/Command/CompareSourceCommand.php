@@ -151,18 +151,12 @@ class CompareSourceCommand extends Command
         $versionReport = $semanticVersionChecker->loadVersionReport();
         $changedFiles = $semanticVersionChecker->loadChangedFiles();
 
-        foreach ($changedFiles as $file) {
-
+        foreach ($changedFiles as &$file) {
             if (substr($file, 0, strlen($sourceBeforeDir)) == $sourceBeforeDir) {
                 $file = substr($file, strlen($sourceBeforeDir));
             } elseif (substr($file, 0, strlen($sourceAfterDir)) == $sourceAfterDir) {
                 $file = substr($file, strlen($sourceAfterDir));
             }
-
-            if ($this->isVirtualTypeReplacedByType($sourceBeforeDir.$file, $sourceAfterDir.$file)) {
-                $versionIncrease =Level::PATCH; // Set to "Patch"
-                $versionIncWord = strtoupper($this->changeLevels[$versionIncrease]);
-               }
         }
         $changedFiles = array_unique($changedFiles);
 
@@ -241,40 +235,6 @@ class CompareSourceCommand extends Command
             return self::FAILURE_EXIT_CODE;
         }
         return self::SUCCESS_EXIT_CODE;
-    }
-
-    /**
-     * Method to check if definition is changed from virtual to type
-     *
-     * @param string $source
-     * @param string $target
-     * @return bool
-     */
-    private function isVirtualTypeReplacedByType(string $source, string $target):bool
-    {
-        $beforeContent = file_exists($source) ?file_get_contents($source):'';
-        $afterContent = file_exists($target) ? file_get_contents($target) : '';
-
-        if (strpos($target, 'di.xml') !== false) {
-            $virtualTypePattern = '/<virtualType\s+name="([^"]+)"\s+type="[^"]+">.*?<\/virtualType>/s';
-            $typePattern = '/<type\s+name="([^"]+)"\s*>.*?<\/type>/s';
-
-            preg_match_all($virtualTypePattern, $beforeContent, $beforeVirtualTypes);
-            preg_match_all($typePattern, $afterContent, $afterTypes);
-
-            // Extract the names of the virtualTypes and types
-            $beforeVirtualTypeNames = $beforeVirtualTypes[1] ?? [];
-            $afterTypeNames = $afterTypes[1] ?? [];
-
-            if (!empty($beforeVirtualTypeNames)) {
-                foreach ($beforeVirtualTypeNames as $virtualTypeName) {
-                    if (in_array($virtualTypeName, $afterTypeNames)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     /**
