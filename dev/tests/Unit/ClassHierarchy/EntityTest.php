@@ -584,7 +584,7 @@ class EntityTest extends TestCase
      *
      * @return array
      */
-    public function dataProviderIsEnum()
+    public static function dataProviderIsEnum()
     {
         return [
             'entity-is-class-returns-false'     => [
