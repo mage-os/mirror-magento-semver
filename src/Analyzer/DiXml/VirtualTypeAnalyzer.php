@@ -58,6 +58,11 @@ class VirtualTypeAnalyzer implements AnalyzerInterface
         foreach ($nodesBefore as $moduleName => $moduleNodes) {
             /* @var VirtualType $nodeBefore */
             $fileBefore = $registryBefore->mapping[XmlRegistry::NODES_KEY][$moduleName];
+
+            // Check if $moduleName exists in $registryAfter->mapping[XmlRegistry::NODES_KEY]
+            if (!isset($registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName])) {
+                continue;
+            }
             foreach ($moduleNodes as $name => $nodeBefore) {
                 // search nodesAfter the by name
                 $nodeAfter = $nodesAfter[$moduleName][$name] ?? false;
