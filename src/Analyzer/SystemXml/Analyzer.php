@@ -25,6 +25,7 @@ use Magento\SemanticVersionChecker\Operation\SystemXml\SectionRemoved;
 use Magento\SemanticVersionChecker\Registry\XmlRegistry;
 use PHPSemVerChecker\Registry\Registry;
 use PHPSemVerChecker\Report\Report;
+use Magento\SemanticVersionChecker\Operation\SystemXml\FieldDuplicated;
 
 /**
  * Analyzes <kbd>system.xml</kbd> files:
@@ -92,12 +93,61 @@ class Analyzer implements AnalyzerInterface
                 $beforeFile = $registryBefore->mapping[XmlRegistry::NODES_KEY][$moduleName];
                 $this->reportRemovedNodes($beforeFile, $removedNodes);
             }
+            print_r('Added Nodes');
+            print_r($addedNodes);
             if ($addedNodes) {
                 $afterFile = $registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName];
-                $this->reportAddedNodes($afterFile, $addedNodes);
+                $duplicateNode = $this->reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes, $moduleNodesBefore);
+                print_r('Duplicate node '.$duplicateNode.' found');
+                print_r("After file ". $afterFile );
+                if ($duplicateNode) {
+                    $this->reportDuplicateNodes($afterFile, $addedNodes);
+                } else {
+                    $this->reportAddedNodes($afterFile, $addedNodes);
+                }
             }
         }
         return $this->report;
+    }
+
+    /**
+     * Check and Report duplicate nodes
+     *
+     * @param $afterFile
+     * @param $addedNodes
+     * @param $moduleNodesBefore
+     * @return bool|void
+     */
+    private function reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes, $moduleNodesBefore)
+    {
+        print_r('Report Added Nodes function called.');
+        foreach ($addedNodes as $nodeId => $node) {
+            // Check for duplicates by comparing node content except for 'id'
+            $isDuplicate = false;
+            foreach ($moduleNodesBefore as $existingNodeId => $existingNode) {
+                if ($this->isDuplicateNode($node, $existingNode)) {
+                    $isDuplicate = true;
+                    break;
+                }
+            }
+            return $isDuplicate;
+        }
+    }
+
+    /**
+     * Check if node is duplicate or not
+     *
+     * @param $node
+     * @param $existingNode
+     * @return bool
+     */
+    private function isDuplicateNode($node, $existingNode)
+    {
+        // Remove 'id' key for comparison
+        unset($node['id'], $existingNode['id']);
+
+        // Compare the remaining parts of the nodes
+        return $node == $existingNode;
     }
 
     /**
@@ -160,6 +210,26 @@ class Analyzer implements AnalyzerInterface
                     break;
                 default:
                     //NOP - Unknown node types are simply ignored as we do not validate
+            }
+        }
+    }
+
+    /**
+     * Creates reports for <var>$nodes</var> considering that they have been duplicated.
+     *
+     * @param string $file
+     * @param NodeInterface[] $nodes
+     */
+    private function reportDuplicateNodes(string $file, array $nodes)
+    {
+        print_r('Duplicate Nodes switch case');
+        foreach ($nodes as $node) {
+            echo "<br/> $node->getPath() <br/>";
+            switch (true) {
+                case $node instanceof Field:
+                    $this->report->add('system', new FieldDuplicated($file, $node->getPath()));
+                    break;
+                default:
             }
         }
     }
