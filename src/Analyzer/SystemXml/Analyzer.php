@@ -122,6 +122,7 @@ class Analyzer implements AnalyzerInterface
     {
         print_r('Report Added Nodes function called.');
         foreach ($addedNodes as $nodeId => $node) {
+            $this->inspectObject($node);
             // Check for duplicates by comparing node content except for 'id'
             $isDuplicate = false;
             foreach ($moduleNodesBefore as $existingNodeId => $existingNode) {
@@ -131,6 +132,23 @@ class Analyzer implements AnalyzerInterface
                 }
             }
             return $isDuplicate;
+        }
+    }
+
+    private function inspectObject($object)
+    {
+        $reflection = new \ReflectionClass($object);
+        $properties = $reflection->getProperties();
+        $methods = $reflection->getMethods();
+
+        echo "\nProperties:\n";
+        foreach ($properties as $property) {
+            echo $property->getName() . "\n";
+        }
+
+        echo "\nMethods:\n";
+        foreach ($methods as $method) {
+            echo $method->getName() . "\n";
         }
     }
 
@@ -145,7 +163,7 @@ class Analyzer implements AnalyzerInterface
     {
         // Access the 'id' properties using possible getter methods
         //Testing file
-        
+
         $nodeId = $this->getPrivateProperty($node, 'id');
         $existingNodeId = $this->getPrivateProperty($existingNode, 'id');
 
