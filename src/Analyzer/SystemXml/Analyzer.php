@@ -143,13 +143,34 @@ class Analyzer implements AnalyzerInterface
      */
     private function isDuplicateNode($node, $existingNode)
     {
-        $nodeData = $node->data;
-        $existingNodeData = $existingNode->data;
-        // Remove 'id' key for comparison
-        unset($nodeData['id'], $existingNodeData['id']);
+        // Access the 'id' properties using possible getter methods
+        //Testing file
+        
+        $nodeId = $this->getPrivateProperty($node, 'id');
+        $existingNodeId = $this->getPrivateProperty($existingNode, 'id');
 
-        // Compare the remaining parts of the nodes
-        return $node == $existingNode;
+        // Access 'parent' properties if needed, depending on your logic
+        $nodeParent = $this->getPrivateProperty($node, 'parent');
+        $existingNodeParent = $this->getPrivateProperty($existingNode, 'parent');
+
+        // Compare the nodes after ignoring 'id'
+        return $nodeParent == $existingNodeParent;
+    }
+
+    /**
+     * Simplifies the reflection to get property
+     *
+     * @param $object
+     * @param $propertyName
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    private function getPrivateProperty($object, $propertyName)
+    {
+        $reflection = new \ReflectionClass($object);
+        $property = $reflection->getProperty($propertyName);
+        $property->setAccessible(true);
+        return $property->getValue($object);
     }
 
     /**
