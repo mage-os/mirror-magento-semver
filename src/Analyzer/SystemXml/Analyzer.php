@@ -143,8 +143,10 @@ class Analyzer implements AnalyzerInterface
      */
     private function isDuplicateNode($node, $existingNode)
     {
+        $nodeData = $node->data;
+        $existingNodeData = $existingNode->data;
         // Remove 'id' key for comparison
-        unset($node['id'], $existingNode['id']);
+        unset($nodeData['id'], $existingNodeData['id']);
 
         // Compare the remaining parts of the nodes
         return $node == $existingNode;
