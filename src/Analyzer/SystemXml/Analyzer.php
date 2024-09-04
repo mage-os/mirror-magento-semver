@@ -161,18 +161,34 @@ class Analyzer implements AnalyzerInterface
      */
     private function isDuplicateNode($node, $existingNode)
     {
-        // Access the 'id' properties using possible getter methods
-        //Testing file
+        // Get node data excluding 'id' and 'parent' for comparison
+        $nodeData = $this->getNodeData($node);
+        $existingNodeData = $this->getNodeData($existingNode);
 
-        $nodeId = $this->getPrivateProperty($node, 'id');
-        $existingNodeId = $this->getPrivateProperty($existingNode, 'id');
+        // Compare the remaining parts of the nodes
+        return $nodeData == $existingNodeData;
+    }
 
-        // Access 'parent' properties if needed, depending on your logic
-        $nodeParent = $this->getPrivateProperty($node, 'parent');
-        $existingNodeParent = $this->getPrivateProperty($existingNode, 'parent');
+    private function getNodeData($node)
+    {
+        $data = [];
 
-        // Compare the nodes after ignoring 'id'
-        return $nodeParent == $existingNodeParent;
+        // Use reflection to get accessible properties
+        $reflection = new \ReflectionClass($node);
+        foreach ($reflection->getMethods() as $method) {
+            // Skip 'getId' and 'getParent' methods for comparison
+            if ($method->getName() === 'getId' || $method->getName() === 'getParent') {
+                continue;
+            }
+
+            // Dynamically call the getter methods
+            if (strpos($method->getName(), 'get') === 0) {
+                $propertyName = lcfirst(str_replace('get', '', $method->getName()));
+                $data[$propertyName] = $method->invoke($node);
+            }
+        }
+
+        return $data;
     }
 
     /**
