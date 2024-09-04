@@ -121,18 +121,21 @@ class Analyzer implements AnalyzerInterface
     private function reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes, $moduleNodesBefore)
     {
         print_r('Report Added Nodes function called.');
+        $isDuplicate = false;
+
         foreach ($addedNodes as $nodeId => $node) {
             $this->inspectObject($node);
+
             // Check for duplicates by comparing node content except for 'id'
-            $isDuplicate = false;
             foreach ($moduleNodesBefore as $existingNodeId => $existingNode) {
                 if ($this->isDuplicateNode($node, $existingNode)) {
                     $isDuplicate = true;
-                    break;
+                    break 2; // Break out of both loops if a duplicate is found
                 }
             }
-            return $isDuplicate;
         }
+
+        return $isDuplicate;
     }
 
     private function inspectObject($object)
