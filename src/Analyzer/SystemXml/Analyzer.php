@@ -126,6 +126,9 @@ class Analyzer implements AnalyzerInterface
         foreach ($addedNodes as $nodeId => $node) {
             $this->inspectObject($node);
 
+            print_r('Modules node before in reportAddedNodesWithDuplicateCheck method');
+            print_r($moduleNodesBefore);
+
             // Check for duplicates by comparing node content except for 'id'
             foreach ($moduleNodesBefore as $existingNodeId => $existingNode) {
                 if ($this->isDuplicateNode($node, $existingNode)) {
@@ -134,6 +137,7 @@ class Analyzer implements AnalyzerInterface
                 }
             }
         }
+        print_r("Duplicate node values:  $isDuplicate");
 
         return $isDuplicate;
     }
@@ -164,10 +168,15 @@ class Analyzer implements AnalyzerInterface
      */
     private function isDuplicateNode($node, $existingNode)
     {
+        print_r('\nis Duplicated node\n');
         // Get node data excluding 'id' and 'parent' for comparison
         $nodeData = $this->getNodeData($node);
         $existingNodeData = $this->getNodeData($existingNode);
 
+      echo "\nnddata\n";
+      print_r($nodeData);
+      echo "\nexisting node\n";
+      print_r($existingNodeData);
         // Compare the remaining parts of the nodes
         return $nodeData == $existingNodeData;
     }
