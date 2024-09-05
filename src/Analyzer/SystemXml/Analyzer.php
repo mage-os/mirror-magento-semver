@@ -126,7 +126,7 @@ class Analyzer implements AnalyzerInterface
         foreach ($addedNodes as $nodeId => $node) {
             $this->inspectObject($node);
 
-            print_r('Modules node before in reportAddedNodesWithDuplicateCheck method');
+            print_r('Modulesfsdfsfdsf node before in reportAddedNodesWithDuplicateCheck method');
             print_r($moduleNodesBefore);
 
             // Check for duplicates by comparing node content except for 'id'
