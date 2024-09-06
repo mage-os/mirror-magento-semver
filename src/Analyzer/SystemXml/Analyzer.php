@@ -98,7 +98,7 @@ class Analyzer implements AnalyzerInterface
             if ($addedNodes) {
                 $afterFile = $registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName];
                 $duplicateNode = $this->reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes, $moduleNodesBefore);
-                print_r('Duplicate node '.$duplicateNode.' found');
+                print_r('Duplicate node ' . ($duplicateNode ? 'found' : 'not found'));
                 print_r("After file ". $afterFile );
                 if ($duplicateNode) {
                     $this->reportDuplicateNodes($afterFile, $addedNodes);
@@ -126,9 +126,6 @@ class Analyzer implements AnalyzerInterface
         foreach ($addedNodes as $nodeId => $node) {
             $this->inspectObject($node);
 
-            print_r('Modulesfsdfsfdsf node before in reportAddedNodesWithDuplicateCheck method');
-            print_r($moduleNodesBefore);
-
             // Check for duplicates by comparing node content except for 'id'
             foreach ($moduleNodesBefore as $existingNodeId => $existingNode) {
                 if ($this->isDuplicateNode($node, $existingNode)) {
@@ -150,12 +147,12 @@ class Analyzer implements AnalyzerInterface
 
         echo "\nProperties:\n";
         foreach ($properties as $property) {
-            echo $property->getName() . "\n";
+        //    echo $property->getName() . "\n";
         }
 
         echo "\nMethods:\n";
         foreach ($methods as $method) {
-            echo $method->getName() . "\n";
+         //   echo $method->getName() . "\n";
         }
     }
 
@@ -168,17 +165,61 @@ class Analyzer implements AnalyzerInterface
      */
     private function isDuplicateNode($node, $existingNode)
     {
-        print_r('\nis Duplicated node\n');
-        // Get node data excluding 'id' and 'parent' for comparison
-        $nodeData = $this->getNodeData($node);
+        // Extract data from both nodes
+        $newNodeData = $this->getNodeData($node);
         $existingNodeData = $this->getNodeData($existingNode);
+      /*  echo "\n New Node\n";
+        print_r($newNodeData);
+        echo "\n~~~~~~~~~~~~~~~\n";
+        echo "\n Existing Node\n";
+        print_r($existingNodeData);*/
+        // Remove 'id' from both nodes for comparison, including from the path
+        unset($newNodeData['id'], $existingNodeData['id']);
+        $newNodePath = $this->removeLastPart($newNodeData['path']);
+        $existingNodePath = $this->removeLastPart($existingNodeData['path']);
 
-      echo "\nnddata\n";
-      print_r($nodeData);
-      echo "\nexisting node\n";
-      print_r($existingNodeData);
-        // Compare the remaining parts of the nodes
-        return $nodeData == $existingNodeData;
+     //   print_r($newNodeData());
+
+        // Set the modified paths without the 'id'
+        $newNodeData['path'] = $newNodePath;
+        $existingNodeData['path'] = $existingNodePath;
+
+        // Compare the remaining data (skip source_model since it's not provided)
+        foreach ($newNodeData as $key => $newValue) {
+            if (isset($existingNodeData[$key])) {
+                $existingValue = $existingNodeData[$key];
+                echo "\nNew Value".$newValue ." !== Existing Value". $existingValue."\n";
+                if (trim($newValue) == trim($existingValue)) {
+                    echo "\nCame in condition.\n";
+                    echo "Property '$key' does not match between nodes.\n";
+                    return true;
+                }
+            } else {
+                echo "Property '$key' missing in the existing node.\n";
+                return false;
+            }
+        }
+
+        // If all properties match (except 'id'), the nodes are duplicates
+        echo "Nodes are duplicates based on their content.\n";
+        return false;
+    }
+
+   /* private function getNodeData($node)
+    {
+        return [
+            'path' => $node->getPath(),
+            'uniqueKey' => $node->getUniqueKey(),
+            // Add more properties to compare if available, but exclude 'source_model'
+        ];
+    }*/
+
+    private function removeLastPart($path)
+    {
+        // Remove the last part of the path (usually the 'id') to compare node structure without it
+        $pathParts = explode('/', $path);
+        array_pop($pathParts); // Remove the last part
+        return implode('/', $pathParts); // Return the path without the 'id'
     }
 
     private function getNodeData($node)
@@ -201,22 +242,6 @@ class Analyzer implements AnalyzerInterface
         }
 
         return $data;
-    }
-
-    /**
-     * Simplifies the reflection to get property
-     *
-     * @param $object
-     * @param $propertyName
-     * @return mixed
-     * @throws \ReflectionException
-     */
-    private function getPrivateProperty($object, $propertyName)
-    {
-        $reflection = new \ReflectionClass($object);
-        $property = $reflection->getProperty($propertyName);
-        $property->setAccessible(true);
-        return $property->getValue($object);
     }
 
     /**
@@ -293,7 +318,6 @@ class Analyzer implements AnalyzerInterface
     {
         print_r('Duplicate Nodes switch case');
         foreach ($nodes as $node) {
-            echo "<br/> $node->getPath() <br/>";
             switch (true) {
                 case $node instanceof Field:
                     $this->report->add('system', new FieldDuplicated($file, $node->getPath()));
