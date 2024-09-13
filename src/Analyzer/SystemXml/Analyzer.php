@@ -26,6 +26,7 @@ use Magento\SemanticVersionChecker\Registry\XmlRegistry;
 use PHPSemVerChecker\Registry\Registry;
 use PHPSemVerChecker\Report\Report;
 use Magento\SemanticVersionChecker\Operation\SystemXml\FieldDuplicated;
+use RecursiveDirectoryIterator;
 
 /**
  * Analyzes <kbd>system.xml</kbd> files:
@@ -82,7 +83,7 @@ class Analyzer implements AnalyzerInterface
 
         //process removed files
         $this->reportRemovedFiles($removedModules, $registryBefore);
-
+        $duplicateNode = [];
         //process common files
         foreach ($commonModules as $moduleName) {
             $moduleNodesBefore = $nodesBefore[$moduleName];
@@ -93,13 +94,12 @@ class Analyzer implements AnalyzerInterface
                 $beforeFile = $registryBefore->mapping[XmlRegistry::NODES_KEY][$moduleName];
                 $this->reportRemovedNodes($beforeFile, $removedNodes);
             }
-            print_r('Added Nodes');
-            print_r($addedNodes);
+
             if ($addedNodes) {
                 $afterFile = $registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName];
-                $duplicateNode = $this->reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes, $moduleNodesBefore);
-                print_r('Duplicate node ' . ($duplicateNode ? 'found' : 'not found'));
-                print_r("After file ". $afterFile );
+                $duplicateNode = $this->reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes);
+
+                print_r($duplicateNode);
                 if ($duplicateNode) {
                     $this->reportDuplicateNodes($afterFile, $addedNodes);
                 } else {
@@ -111,117 +111,148 @@ class Analyzer implements AnalyzerInterface
     }
 
     /**
+     * Get Magento Base directory from the path
+     *
+     * @param string $filePath
+     * @return string|null
+     */
+    private function getBaseDir($filePath)
+    {
+        $currentDir = dirname($filePath);
+        while ($currentDir !== '/' && $currentDir !== false) {
+            // Check if current directory contains files unique to Magento root
+            if (file_exists($currentDir . '/SECURITY.md')) {
+                return $currentDir; // Found the Magento base directory
+            }
+            $currentDir = dirname($currentDir);
+        }
+        return null;
+    }
+
+    /**
+     * Search for system.xml files in both app/code and vendor directories, excluding the provided file.
+     *
+     * @param string $magentoBaseDir The base directory of Magento.
+     * @param string $excludeFile The file to exclude from the search.
+     * @return array An array of paths to system.xml files, excluding the specified file.
+     */
+    private function searchSystemXmlFiles($magentoBaseDir, $excludeFile = null)
+    {
+        $systemXmlFiles = [];
+        $directoryToSearch = [
+            $magentoBaseDir.'/app/code'
+        ];
+
+        // Check if 'vendor' directory exists, and only add it if it does
+        if (is_dir($magentoBaseDir . '/vendor')) {
+            $directoriesToSearch[] = $magentoBaseDir . '/vendor';
+        }
+        foreach ($directoryToSearch as $directory) {
+            $iterator = new \RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
+            foreach ($iterator as $file) {
+                if ($file->getfileName() === 'system.xml') {
+                    $filePath = $file->getRealPath();
+                    if ($filePath !== $excludeFile) {
+                        $systemXmlFiles[] = $file->getRealPath();
+                    }
+                }
+            }
+        }
+        return $systemXmlFiles;
+    }
+
+    /**
      * Check and Report duplicate nodes
      *
      * @param $afterFile
      * @param $addedNodes
      * @param $moduleNodesBefore
-     * @return bool|void
+     * @return bool
+     * @throws \Exception
      */
-    private function reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes, $moduleNodesBefore)
+    private function reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes)
     {
-        print_r('Report Added Nodes function called.');
-        $isDuplicate = false;
+        $baseDir = $this->getBaseDir($afterFile);
+        $hasDuplicate = false;
 
         foreach ($addedNodes as $nodeId => $node) {
-            $this->inspectObject($node);
+            $newNodeData = $this->getNodeData($node);
+            $nodePath = $newNodeData['path'];
 
-            // Check for duplicates by comparing node content except for 'id'
-            foreach ($moduleNodesBefore as $existingNodeId => $existingNode) {
-                if ($this->isDuplicateNode($node, $existingNode)) {
-                    $isDuplicate = true;
-                    break 2; // Break out of both loops if a duplicate is found
-                }
+            // Extract section, group, and fieldId with error handling
+            $extractedData = $this->extractSectionGroupField($nodePath);
+
+         //   var_dump($extractedData);
+            if ($extractedData === null) {
+                // Skip the node if its path is invalid
+            //    echo "Skipping node with invalid path: $nodePath\n";
+                continue;
             }
+
+            // Extract section, group, and fieldId
+            list($sectionId, $groupId, $fieldId) = $extractedData;
+
+
+
+            // Call function to check if this field is duplicated in other system.xml files
+            $isDuplicated = $this->isDuplicatedFieldInXml($baseDir, $sectionId, $groupId, $fieldId, $afterFile);
+
+            if ($isDuplicated) {
+                $hasDuplicate = true;
+                echo "\n\nDuplicate found for the field: $fieldId\n\n";
+            } else {
+
+                $hasDuplicate = false;
+                echo "\n\nNo duplicates for the field: $fieldId\n";
+            }
+
+            //     $nodeIds = strrpos($newNodeData['path'],'/');
+
+            // Extract the substring after the last "/"
+            // if ($nodeIds !== false) {
+            //    $fieldId = substr($newNodeData['path'], $nodeIds + 1);
+            //    }
+        //    echo "\nDuplicate $hasDuplicate for the\n";
+         //   echo "Checking for duplicates for Section: $sectionId, Group: $groupId, Field: $fieldId\n";
+
+          //  return $hasDuplicate;
         }
-        print_r("Duplicate node values:  $isDuplicate");
 
-        return $isDuplicate;
-    }
+        return $hasDuplicate;
 
-    private function inspectObject($object)
-    {
-        $reflection = new \ReflectionClass($object);
-        $properties = $reflection->getProperties();
-        $methods = $reflection->getMethods();
-
-        echo "\nProperties:\n";
-        foreach ($properties as $property) {
-        //    echo $property->getName() . "\n";
-        }
-
-        echo "\nMethods:\n";
-        foreach ($methods as $method) {
-         //   echo $method->getName() . "\n";
-        }
+        //  return $this->isDuplicatedFieldInXml($baseDir, $fieldId, $afterFile);
     }
 
     /**
-     * Check if node is duplicate or not
+     * Method to extract section, group and field from the Node
      *
-     * @param $node
-     * @param $existingNode
-     * @return bool
+     * @param $nodePath
+     * @return array|null
      */
-    private function isDuplicateNode($node, $existingNode)
+    private function extractSectionGroupField($nodePath)
     {
-        // Extract data from both nodes
-        $newNodeData = $this->getNodeData($node);
-        $existingNodeData = $this->getNodeData($existingNode);
-      /*  echo "\n New Node\n";
-        print_r($newNodeData);
-        echo "\n~~~~~~~~~~~~~~~\n";
-        echo "\n Existing Node\n";
-        print_r($existingNodeData);*/
-        // Remove 'id' from both nodes for comparison, including from the path
-        unset($newNodeData['id'], $existingNodeData['id']);
-        $newNodePath = $this->removeLastPart($newNodeData['path']);
-        $existingNodePath = $this->removeLastPart($existingNodeData['path']);
+        $parts = explode('/', $nodePath);
 
-     //   print_r($newNodeData());
-
-        // Set the modified paths without the 'id'
-        $newNodeData['path'] = $newNodePath;
-        $existingNodeData['path'] = $existingNodePath;
-
-        // Compare the remaining data (skip source_model since it's not provided)
-        foreach ($newNodeData as $key => $newValue) {
-            if (isset($existingNodeData[$key])) {
-                $existingValue = $existingNodeData[$key];
-                echo "\nNew Value".$newValue ." !== Existing Value". $existingValue."\n";
-                if (trim($newValue) == trim($existingValue)) {
-                    echo "\nCame in condition.\n";
-                    echo "Property '$key' does not match between nodes.\n";
-                    return true;
-                }
-            } else {
-                echo "Property '$key' missing in the existing node.\n";
-                return false;
-            }
+        if (count($parts) < 3) {
+            // Invalid path if there are fewer than 3 parts
+            return null;
         }
 
-        // If all properties match (except 'id'), the nodes are duplicates
-        echo "Nodes are duplicates based on their content.\n";
-        return false;
+        $sectionId = $parts[0];
+        $groupId = $parts[1];
+        $fieldId = $parts[2];
+
+
+        return [$sectionId, $groupId, $fieldId];
     }
 
-   /* private function getNodeData($node)
-    {
-        return [
-            'path' => $node->getPath(),
-            'uniqueKey' => $node->getUniqueKey(),
-            // Add more properties to compare if available, but exclude 'source_model'
-        ];
-    }*/
-
-    private function removeLastPart($path)
-    {
-        // Remove the last part of the path (usually the 'id') to compare node structure without it
-        $pathParts = explode('/', $path);
-        array_pop($pathParts); // Remove the last part
-        return implode('/', $pathParts); // Return the path without the 'id'
-    }
-
+    /**
+     * Method to get Node Data using reflection class
+     *
+     * @param $node
+     * @return array
+     * @throws \ReflectionException
+     */
     private function getNodeData($node)
     {
         $data = [];
@@ -316,7 +347,6 @@ class Analyzer implements AnalyzerInterface
      */
     private function reportDuplicateNodes(string $file, array $nodes)
     {
-        print_r('Duplicate Nodes switch case');
         foreach ($nodes as $node) {
             switch (true) {
                 case $node instanceof Field:
@@ -364,5 +394,50 @@ class Analyzer implements AnalyzerInterface
                     //NOP Unknown node type
             }
         }
+    }
+
+    /**
+     * @param string|null $baseDir
+     * @param string $sectionId
+     * @param string $groupId
+     * @param string $fieldId
+     * @param string $afterFile
+     * @return array
+     * @throws \Exception
+     */
+    private function isDuplicatedFieldInXml(?string $baseDir, string $sectionId, string $groupId, string $fieldId, string $afterFile): array
+    {
+        if ($baseDir) {
+            $systemXmlFiles = $this->searchSystemXmlFiles($baseDir, $afterFile);
+
+            $result = [];
+
+
+            foreach ($systemXmlFiles as $systemXmlFile) {
+                $xmlContent = file_get_contents($systemXmlFile);
+                try {
+                    $xml = new \SimpleXMLElement($xmlContent);
+                } catch (\Exception $e) {
+                    echo "\nError parsing XML: " . $e->getMessage() . "\n";
+                    continue; // Skip this file if there's a parsing error
+                }
+                // Find <field> nodes with the given field ID
+                // XPath to search for <field> within a specific section and group
+                $fields = $xml->xpath("//section[@id='$sectionId']/group[@id='$groupId']/field[@id='$fieldId']");
+
+
+                if (!empty($fields)) {
+                    echo "\n\nFound match in: $systemXmlFile\n";
+                    $result[] = [
+                        'status' => 'patch',
+                        'field'  => $fieldId
+                    ];
+                    //   break ;
+                }
+            }
+
+        }
+
+        return $result;
     }
 }
