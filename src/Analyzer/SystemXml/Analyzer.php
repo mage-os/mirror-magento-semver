@@ -25,7 +25,7 @@ use Magento\SemanticVersionChecker\Operation\SystemXml\SectionRemoved;
 use Magento\SemanticVersionChecker\Registry\XmlRegistry;
 use PHPSemVerChecker\Registry\Registry;
 use PHPSemVerChecker\Report\Report;
-use Magento\SemanticVersionChecker\Operation\SystemXml\FieldDuplicated;
+use Magento\SemanticVersionChecker\Operation\SystemXml\DuplicateFieldAdded;
 use RecursiveDirectoryIterator;
 
 /**
@@ -153,7 +153,7 @@ class Analyzer implements AnalyzerInterface
      * @param string $excludeFile The file to exclude from the search.
      * @return array An array of paths to system.xml files, excluding the specified file.
      */
-    private function searchSystemXmlFiles($magentoBaseDir, $excludeFile = null)
+    private function getSystemXmlFiles($magentoBaseDir, $excludeFile = null)
     {
         $systemXmlFiles = [];
         $directoryToSearch = [
@@ -305,7 +305,7 @@ class Analyzer implements AnalyzerInterface
         foreach ($nodes as $node) {
             switch (true) {
                 case $node instanceof Field:
-                    $this->report->add('system', new FieldDuplicated($file, $node->getPath()));
+                    $this->report->add('system', new DuplicateFieldAdded($file, $node->getPath()));
                     break;
                 default:
             }
@@ -363,8 +363,9 @@ class Analyzer implements AnalyzerInterface
     private function isDuplicatedFieldInXml(?string $baseDir, string $sectionId, string $groupId, ?string $fieldId, string $afterFile): array
     {
         $hasDuplicate = false;
+
         if ($baseDir) {
-            $systemXmlFiles = $this->searchSystemXmlFiles($baseDir, $afterFile);
+            $systemXmlFiles = $this->getSystemXmlFiles($baseDir, $afterFile);
 
             $result = [];
 

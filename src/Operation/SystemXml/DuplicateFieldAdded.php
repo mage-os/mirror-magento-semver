@@ -15,7 +15,7 @@ use PHPSemVerChecker\SemanticVersioning\Level;
 /**
  * When a <kbd>field</kbd> node is added.
  */
-class FieldDuplicated extends AbstractOperation
+class DuplicateFieldAdded extends AbstractOperation
 {
     /**
      * @var string
