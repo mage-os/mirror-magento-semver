@@ -83,7 +83,7 @@ class Analyzer implements AnalyzerInterface
 
         //process removed files
         $this->reportRemovedFiles($removedModules, $registryBefore);
-        $duplicateNode = [];
+
         //process common files
         foreach ($commonModules as $moduleName) {
             $moduleNodesBefore = $nodesBefore[$moduleName];
@@ -97,13 +97,30 @@ class Analyzer implements AnalyzerInterface
 
             if ($addedNodes) {
                 $afterFile = $registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName];
-                $duplicateNode = $this->reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes);
+                $baseDir = $this->getBaseDir($afterFile);
+                foreach ($addedNodes as $nodeId => $node) {
+                    $newNodeData = $this->getNodeData($node);
+                    $nodePath = $newNodeData['path'];
 
-                print_r($duplicateNode);
-                if ($duplicateNode) {
-                    $this->reportDuplicateNodes($afterFile, $addedNodes);
-                } else {
-                    $this->reportAddedNodes($afterFile, $addedNodes);
+                    // Extract section, group, and fieldId with error handling
+                    $extractedData = $this->extractSectionGroupField($nodePath);
+                    if ($extractedData === null) {
+                        // Skip the node if its path is invalid
+                        continue;
+                    }
+
+                    // Extract section, group, and fieldId
+                    list($sectionId, $groupId, $fieldId) = $extractedData;
+
+                    // Call function to check if this field is duplicated in other system.xml files
+                    $isDuplicated = $this->isDuplicatedFieldInXml($baseDir, $sectionId, $groupId, $fieldId, $afterFile);
+                    foreach ($isDuplicated as $isDuplicatedItem) {
+                        if ($isDuplicatedItem['status'] === 'duplicate') {
+                            $this->reportDuplicateNodes($afterFile, [$nodeId => $node ]);
+                        } else {
+                            $this->reportAddedNodes($afterFile,  [$nodeId => $node ]);
+                        }
+                    }
                 }
             }
         }
@@ -159,68 +176,6 @@ class Analyzer implements AnalyzerInterface
             }
         }
         return $systemXmlFiles;
-    }
-
-    /**
-     * Check and Report duplicate nodes
-     *
-     * @param $afterFile
-     * @param $addedNodes
-     * @param $moduleNodesBefore
-     * @return bool
-     * @throws \Exception
-     */
-    private function reportAddedNodesWithDuplicateCheck($afterFile, $addedNodes)
-    {
-        $baseDir = $this->getBaseDir($afterFile);
-        $hasDuplicate = false;
-
-        foreach ($addedNodes as $nodeId => $node) {
-            $newNodeData = $this->getNodeData($node);
-            $nodePath = $newNodeData['path'];
-
-            // Extract section, group, and fieldId with error handling
-            $extractedData = $this->extractSectionGroupField($nodePath);
-
-         //   var_dump($extractedData);
-            if ($extractedData === null) {
-                // Skip the node if its path is invalid
-            //    echo "Skipping node with invalid path: $nodePath\n";
-                continue;
-            }
-
-            // Extract section, group, and fieldId
-            list($sectionId, $groupId, $fieldId) = $extractedData;
-
-
-
-            // Call function to check if this field is duplicated in other system.xml files
-            $isDuplicated = $this->isDuplicatedFieldInXml($baseDir, $sectionId, $groupId, $fieldId, $afterFile);
-
-            if ($isDuplicated) {
-                $hasDuplicate = true;
-                echo "\n\nDuplicate found for the field: $fieldId\n\n";
-            } else {
-
-                $hasDuplicate = false;
-                echo "\n\nNo duplicates for the field: $fieldId\n";
-            }
-
-            //     $nodeIds = strrpos($newNodeData['path'],'/');
-
-            // Extract the substring after the last "/"
-            // if ($nodeIds !== false) {
-            //    $fieldId = substr($newNodeData['path'], $nodeIds + 1);
-            //    }
-        //    echo "\nDuplicate $hasDuplicate for the\n";
-         //   echo "Checking for duplicates for Section: $sectionId, Group: $groupId, Field: $fieldId\n";
-
-          //  return $hasDuplicate;
-        }
-
-        return $hasDuplicate;
-
-        //  return $this->isDuplicatedFieldInXml($baseDir, $fieldId, $afterFile);
     }
 
     /**
@@ -405,39 +360,41 @@ class Analyzer implements AnalyzerInterface
      * @return array
      * @throws \Exception
      */
-    private function isDuplicatedFieldInXml(?string $baseDir, string $sectionId, string $groupId, string $fieldId, string $afterFile): array
+    private function isDuplicatedFieldInXml(?string $baseDir, string $sectionId, string $groupId, ?string $fieldId, string $afterFile): array
     {
+        $hasDuplicate = false;
         if ($baseDir) {
             $systemXmlFiles = $this->searchSystemXmlFiles($baseDir, $afterFile);
 
             $result = [];
-
 
             foreach ($systemXmlFiles as $systemXmlFile) {
                 $xmlContent = file_get_contents($systemXmlFile);
                 try {
                     $xml = new \SimpleXMLElement($xmlContent);
                 } catch (\Exception $e) {
-                    echo "\nError parsing XML: " . $e->getMessage() . "\n";
                     continue; // Skip this file if there's a parsing error
                 }
                 // Find <field> nodes with the given field ID
                 // XPath to search for <field> within a specific section and group
                 $fields = $xml->xpath("//section[@id='$sectionId']/group[@id='$groupId']/field[@id='$fieldId']");
-
-
                 if (!empty($fields)) {
-                    echo "\n\nFound match in: $systemXmlFile\n";
-                    $result[] = [
-                        'status' => 'patch',
-                        'field'  => $fieldId
-                    ];
-                    //   break ;
+                    $hasDuplicate = true; // Set the duplicate flag to true if a match is found
+                    break; // Since we found a duplicate, we don't need to check further for this field
                 }
             }
-
+            if ($hasDuplicate) {
+                $result[] = [
+                    'status' => 'duplicate',
+                    'field'  => $fieldId
+                ];
+            } else {
+                $result[] = [
+                    'status' => 'minor',
+                    'field'  => $fieldId
+                ];
+            }
         }
-
         return $result;
     }
 }
