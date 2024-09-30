@@ -114,6 +114,7 @@ class Analyzer implements AnalyzerInterface
 
                     // Call function to check if this field is duplicated in other system.xml files
                     $isDuplicated = $this->isDuplicatedFieldInXml($baseDir, $sectionId, $groupId, $fieldId, $afterFile);
+
                     foreach ($isDuplicated as $isDuplicatedItem) {
                         if ($isDuplicatedItem['status'] === 'duplicate') {
                             $this->reportDuplicateNodes($afterFile, [$nodeId => $node ]);
@@ -196,7 +197,6 @@ class Analyzer implements AnalyzerInterface
         $sectionId = $parts[0];
         $groupId = $parts[1];
         $fieldId = $parts[2];
-
 
         return [$sectionId, $groupId, $fieldId];
     }
@@ -307,7 +307,6 @@ class Analyzer implements AnalyzerInterface
                 case $node instanceof Field:
                     $this->report->add('system', new DuplicateFieldAdded($file, $node->getPath()));
                     break;
-                default:
             }
         }
     }
@@ -364,10 +363,13 @@ class Analyzer implements AnalyzerInterface
     {
         $hasDuplicate = false;
 
+        $result = [
+            'status' => 'minor',
+            'field'  => $fieldId
+        ];
+
         if ($baseDir) {
             $systemXmlFiles = $this->getSystemXmlFiles($baseDir, $afterFile);
-
-            $result = [];
 
             foreach ($systemXmlFiles as $systemXmlFile) {
                 $xmlContent = file_get_contents($systemXmlFile);
@@ -385,17 +387,15 @@ class Analyzer implements AnalyzerInterface
                 }
             }
             if ($hasDuplicate) {
-                $result[] = [
-                    'status' => 'duplicate',
-                    'field'  => $fieldId
-                ];
-            } else {
-                $result[] = [
-                    'status' => 'minor',
-                    'field'  => $fieldId
+                return [
+                    [
+                        'status' => 'duplicate',
+                        'field'  => $fieldId
+
+                    ]
                 ];
             }
         }
-        return $result;
+        return [$result];
     }
 }
