@@ -25,6 +25,8 @@ use Magento\SemanticVersionChecker\Operation\SystemXml\SectionRemoved;
 use Magento\SemanticVersionChecker\Registry\XmlRegistry;
 use PHPSemVerChecker\Registry\Registry;
 use PHPSemVerChecker\Report\Report;
+use Magento\SemanticVersionChecker\Operation\SystemXml\DuplicateFieldAdded;
+use RecursiveDirectoryIterator;
 
 /**
  * Analyzes <kbd>system.xml</kbd> files:
@@ -92,12 +94,140 @@ class Analyzer implements AnalyzerInterface
                 $beforeFile = $registryBefore->mapping[XmlRegistry::NODES_KEY][$moduleName];
                 $this->reportRemovedNodes($beforeFile, $removedNodes);
             }
+
             if ($addedNodes) {
                 $afterFile = $registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName];
-                $this->reportAddedNodes($afterFile, $addedNodes);
+                $baseDir = $this->getBaseDir($afterFile);
+                foreach ($addedNodes as $nodeId => $node) {
+                    $newNodeData = $this->getNodeData($node);
+                    $nodePath = $newNodeData['path'];
+
+                    // Extract section, group, and fieldId with error handling
+                    $extractedData = $this->extractSectionGroupField($nodePath);
+                    if ($extractedData === null) {
+                        // Skip the node if its path is invalid
+                        continue;
+                    }
+
+                    // Extract section, group, and fieldId
+                    list($sectionId, $groupId, $fieldId) = $extractedData;
+
+                    // Call function to check if this field is duplicated in other system.xml files
+                    $isDuplicated = $this->isDuplicatedFieldInXml($baseDir, $sectionId, $groupId, $fieldId, $afterFile);
+
+                    foreach ($isDuplicated as $isDuplicatedItem) {
+                        if ($isDuplicatedItem['status'] === 'duplicate') {
+                            $this->reportDuplicateNodes($afterFile, [$nodeId => $node ]);
+                        } else {
+                            $this->reportAddedNodes($afterFile,  [$nodeId => $node ]);
+                        }
+                    }
+                }
             }
         }
         return $this->report;
+    }
+
+    /**
+     * Get Magento Base directory from the path
+     *
+     * @param string $filePath
+     * @return string|null
+     */
+    private function getBaseDir($filePath)
+    {
+        $currentDir = dirname($filePath);
+        while ($currentDir !== '/' && $currentDir !== false) {
+            // Check if current directory contains files unique to Magento root
+            if (file_exists($currentDir . '/SECURITY.md')) {
+                return $currentDir; // Found the Magento base directory
+            }
+            $currentDir = dirname($currentDir);
+        }
+        return null;
+    }
+
+    /**
+     * Search for system.xml files in both app/code and vendor directories, excluding the provided file.
+     *
+     * @param string $magentoBaseDir The base directory of Magento.
+     * @param string $excludeFile The file to exclude from the search.
+     * @return array An array of paths to system.xml files, excluding the specified file.
+     */
+    private function getSystemXmlFiles($magentoBaseDir, $excludeFile = null)
+    {
+        $systemXmlFiles = [];
+        $directoryToSearch = [
+            $magentoBaseDir.'/app/code'
+        ];
+
+        // Check if 'vendor' directory exists, and only add it if it does
+        if (is_dir($magentoBaseDir . '/vendor')) {
+            $directoriesToSearch[] = $magentoBaseDir . '/vendor';
+        }
+        foreach ($directoryToSearch as $directory) {
+            $iterator = new \RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
+            foreach ($iterator as $file) {
+                if ($file->getfileName() === 'system.xml') {
+                    $filePath = $file->getRealPath();
+                    if ($filePath !== $excludeFile) {
+                        $systemXmlFiles[] = $file->getRealPath();
+                    }
+                }
+            }
+        }
+        return $systemXmlFiles;
+    }
+
+    /**
+     * Method to extract section, group and field from the Node
+     *
+     * @param $nodePath
+     * @return array|null
+     */
+    private function extractSectionGroupField($nodePath)
+    {
+        $parts = explode('/', $nodePath);
+
+        if (count($parts) < 3) {
+            // Invalid path if there are fewer than 3 parts
+            return null;
+        }
+
+        $sectionId = $parts[0];
+        $groupId = $parts[1];
+        $fieldId = $parts[2];
+
+        return [$sectionId, $groupId, $fieldId];
+    }
+
+    /**
+     * Method to get Node Data using reflection class
+     *
+     * @param $node
+     * @return array
+     * @throws \ReflectionException
+     */
+    private function getNodeData($node)
+    {
+        $data = [];
+
+        // Use reflection to get accessible properties
+        $reflection = new \ReflectionClass($node);
+        foreach ($reflection->getMethods() as $method) {
+            // Skip 'getId' and 'getParent' methods for comparison
+            if ($method->getName() === 'getId' || $method->getName() === 'getParent') {
+                continue;
+            }
+
+            // Dynamically call the getter methods
+            if (strpos($method->getName(), 'get') === 0) {
+                $propertyName = lcfirst(str_replace('get', '', $method->getName()));
+                $data[$propertyName] = $method->invoke($node);
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -165,6 +295,23 @@ class Analyzer implements AnalyzerInterface
     }
 
     /**
+     * Creates reports for <var>$nodes</var> considering that they have been duplicated.
+     *
+     * @param string $file
+     * @param NodeInterface[] $nodes
+     */
+    private function reportDuplicateNodes(string $file, array $nodes)
+    {
+        foreach ($nodes as $node) {
+            switch (true) {
+                case $node instanceof Field:
+                    $this->report->add('system', new DuplicateFieldAdded($file, $node->getPath()));
+                    break;
+            }
+        }
+    }
+
+    /**
      * Creates reports for <var>$modules</var> considering that <kbd>system.xml</kbd> has been removed from them.
      *
      * @param array $modules
@@ -201,5 +348,54 @@ class Analyzer implements AnalyzerInterface
                     //NOP Unknown node type
             }
         }
+    }
+
+    /**
+     * @param string|null $baseDir
+     * @param string $sectionId
+     * @param string $groupId
+     * @param string $fieldId
+     * @param string $afterFile
+     * @return array
+     * @throws \Exception
+     */
+    private function isDuplicatedFieldInXml(?string $baseDir, string $sectionId, string $groupId, ?string $fieldId, string $afterFile): array
+    {
+        $hasDuplicate = false;
+
+        $result = [
+            'status' => 'minor',
+            'field'  => $fieldId
+        ];
+
+        if ($baseDir) {
+            $systemXmlFiles = $this->getSystemXmlFiles($baseDir, $afterFile);
+
+            foreach ($systemXmlFiles as $systemXmlFile) {
+                $xmlContent = file_get_contents($systemXmlFile);
+                try {
+                    $xml = new \SimpleXMLElement($xmlContent);
+                } catch (\Exception $e) {
+                    continue; // Skip this file if there's a parsing error
+                }
+                // Find <field> nodes with the given field ID
+                // XPath to search for <field> within a specific section and group
+                $fields = $xml->xpath("//section[@id='$sectionId']/group[@id='$groupId']/field[@id='$fieldId']");
+                if (!empty($fields)) {
+                    $hasDuplicate = true; // Set the duplicate flag to true if a match is found
+                    break; // Since we found a duplicate, we don't need to check further for this field
+                }
+            }
+            if ($hasDuplicate) {
+                return [
+                    [
+                        'status' => 'duplicate',
+                        'field'  => $fieldId
+
+                    ]
+                ];
+            }
+        }
+        return [$result];
     }
 }
