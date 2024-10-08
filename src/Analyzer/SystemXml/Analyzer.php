@@ -98,7 +98,7 @@ class Analyzer implements AnalyzerInterface
             if ($addedNodes) {
                 $afterFile = $registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName];
                 if (strpos($afterFile, '_files') !== false) {
-                    $this->reportAddedNodes($afterFile,$addedNodes);
+                    $this->reportAddedNodes($afterFile, $addedNodes);
                 } else {
                     $baseDir = $this->getBaseDir($afterFile);
                     foreach ($addedNodes as $nodeId => $node) {
@@ -116,7 +116,13 @@ class Analyzer implements AnalyzerInterface
                         list($sectionId, $groupId, $fieldId) = $extractedData;
 
                         // Call function to check if this field is duplicated in other system.xml files
-                        $isDuplicated = $this->isDuplicatedFieldInXml($baseDir, $sectionId, $groupId, $fieldId, $afterFile);
+                        $isDuplicated = $this->isDuplicatedFieldInXml(
+                            $baseDir,
+                            $sectionId,
+                            $groupId,
+                            $fieldId,
+                            $afterFile
+                        );
 
                         foreach ($isDuplicated as $isDuplicatedItem) {
                             if ($isDuplicatedItem['status'] === 'duplicate') {
@@ -162,7 +168,7 @@ class Analyzer implements AnalyzerInterface
     {
         $systemXmlFiles = [];
         $directoryToSearch = [
-            $magentoBaseDir.'/app/code'
+            $magentoBaseDir . '/app/code'
         ];
 
         // Check if 'vendor' directory exists, and only add it if it does
@@ -363,8 +369,13 @@ class Analyzer implements AnalyzerInterface
      * @return array
      * @throws \Exception
      */
-    private function isDuplicatedFieldInXml(?string $baseDir, string $sectionId, string $groupId, ?string $fieldId, string $afterFile): array
-    {
+    private function isDuplicatedFieldInXml(
+        ?string $baseDir,
+        string $sectionId,
+        string $groupId,
+        ?string $fieldId,
+        string $afterFile
+    ): array {
         $hasDuplicate = false;
 
         $result = [
