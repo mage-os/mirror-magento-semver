@@ -97,29 +97,33 @@ class Analyzer implements AnalyzerInterface
 
             if ($addedNodes) {
                 $afterFile = $registryAfter->mapping[XmlRegistry::NODES_KEY][$moduleName];
-                $baseDir = $this->getBaseDir($afterFile);
-                foreach ($addedNodes as $nodeId => $node) {
-                    $newNodeData = $this->getNodeData($node);
-                    $nodePath = $newNodeData['path'];
+                if (strpos($afterFile, '_files') !== false) {
+                    $this->reportAddedNodes($afterFile,$addedNodes);
+                } else {
+                    $baseDir = $this->getBaseDir($afterFile);
+                    foreach ($addedNodes as $nodeId => $node) {
+                        $newNodeData = $this->getNodeData($node);
+                        $nodePath = $newNodeData['path'];
 
-                    // Extract section, group, and fieldId with error handling
-                    $extractedData = $this->extractSectionGroupField($nodePath);
-                    if ($extractedData === null) {
-                        // Skip the node if its path is invalid
-                        continue;
-                    }
+                        // Extract section, group, and fieldId with error handling
+                        $extractedData = $this->extractSectionGroupField($nodePath);
+                        if ($extractedData === null) {
+                            // Skip the node if its path is invalid
+                            continue;
+                        }
 
-                    // Extract section, group, and fieldId
-                    list($sectionId, $groupId, $fieldId) = $extractedData;
+                        // Extract section, group, and fieldId
+                        list($sectionId, $groupId, $fieldId) = $extractedData;
 
-                    // Call function to check if this field is duplicated in other system.xml files
-                    $isDuplicated = $this->isDuplicatedFieldInXml($baseDir, $sectionId, $groupId, $fieldId, $afterFile);
+                        // Call function to check if this field is duplicated in other system.xml files
+                        $isDuplicated = $this->isDuplicatedFieldInXml($baseDir, $sectionId, $groupId, $fieldId, $afterFile);
 
-                    foreach ($isDuplicated as $isDuplicatedItem) {
-                        if ($isDuplicatedItem['status'] === 'duplicate') {
-                            $this->reportDuplicateNodes($afterFile, [$nodeId => $node ]);
-                        } else {
-                            $this->reportAddedNodes($afterFile,  [$nodeId => $node ]);
+                        foreach ($isDuplicated as $isDuplicatedItem) {
+                            if ($isDuplicatedItem['status'] === 'duplicate') {
+                                $this->reportDuplicateNodes($afterFile, [$nodeId => $node]);
+                            } else {
+                                $this->reportAddedNodes($afterFile, [$nodeId => $node]);
+                            }
                         }
                     }
                 }
