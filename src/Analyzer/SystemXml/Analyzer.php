@@ -164,7 +164,7 @@ class Analyzer implements AnalyzerInterface
      * @param string $excludeFile The file to exclude from the search.
      * @return array An array of paths to system.xml files, excluding the specified file.
      */
-    private function getSystemXmlFiles($magentoBaseDir, $excludeFile = null)
+    private function getSystemXmlFiles($magentoBaseDir, $excludeFile = null): array
     {
         $systemXmlFiles = [];
         $directoryToSearch = [
@@ -195,7 +195,7 @@ class Analyzer implements AnalyzerInterface
      * @param $nodePath
      * @return array|null
      */
-    private function extractSectionGroupField($nodePath)
+    private function extractSectionGroupField($nodePath): ?array
     {
         $parts = explode('/', $nodePath);
 
@@ -218,7 +218,7 @@ class Analyzer implements AnalyzerInterface
      * @return array
      * @throws \ReflectionException
      */
-    private function getNodeData($node)
+    private function getNodeData($node): array
     {
         $data = [];
 
@@ -406,7 +406,6 @@ class Analyzer implements AnalyzerInterface
                     [
                         'status' => 'duplicate',
                         'field'  => $fieldId
-
                     ]
                 ];
             }
