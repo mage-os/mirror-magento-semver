@@ -309,8 +309,9 @@ class Analyzer implements AnalyzerInterface
      *
      * @param string $file
      * @param NodeInterface[] $nodes
+     * @return void
      */
-    private function reportDuplicateNodes(string $file, array $nodes)
+    private function reportDuplicateNodes(string $file, array $nodes): void
     {
         foreach ($nodes as $node) {
             switch (true) {
