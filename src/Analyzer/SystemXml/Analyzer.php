@@ -144,7 +144,7 @@ class Analyzer implements AnalyzerInterface
      * @param string $filePath
      * @return string|null
      */
-    private function getBaseDir($filePath)
+    private function getBaseDir($filePath): ?string
     {
         $currentDir = dirname($filePath);
         while ($currentDir !== '/' && $currentDir !== false) {
@@ -164,7 +164,7 @@ class Analyzer implements AnalyzerInterface
      * @param string $excludeFile The file to exclude from the search.
      * @return array An array of paths to system.xml files, excluding the specified file.
      */
-    private function getSystemXmlFiles($magentoBaseDir, $excludeFile = null)
+    private function getSystemXmlFiles($magentoBaseDir, $excludeFile = null): array
     {
         $systemXmlFiles = [];
         $directoryToSearch = [
@@ -195,7 +195,7 @@ class Analyzer implements AnalyzerInterface
      * @param $nodePath
      * @return array|null
      */
-    private function extractSectionGroupField($nodePath)
+    private function extractSectionGroupField($nodePath): ?array
     {
         $parts = explode('/', $nodePath);
 
@@ -218,7 +218,7 @@ class Analyzer implements AnalyzerInterface
      * @return array
      * @throws \ReflectionException
      */
-    private function getNodeData($node)
+    private function getNodeData($node): array
     {
         $data = [];
 
@@ -309,8 +309,9 @@ class Analyzer implements AnalyzerInterface
      *
      * @param string $file
      * @param NodeInterface[] $nodes
+     * @return void
      */
-    private function reportDuplicateNodes(string $file, array $nodes)
+    private function reportDuplicateNodes(string $file, array $nodes): void
     {
         foreach ($nodes as $node) {
             switch (true) {
@@ -326,8 +327,9 @@ class Analyzer implements AnalyzerInterface
      *
      * @param array $modules
      * @param XmlRegistry $registryBefore
+     * @return void
      */
-    private function reportRemovedFiles(array $modules, XmlRegistry $registryBefore)
+    private function reportRemovedFiles(array $modules, XmlRegistry $registryBefore): void
     {
         foreach ($modules as $module) {
             $beforeFile = $registryBefore->mapping[XmlRegistry::NODES_KEY][$module];
@@ -340,8 +342,9 @@ class Analyzer implements AnalyzerInterface
      *
      * @param string $file
      * @param NodeInterface[] $nodes
+     * @return void
      */
-    private function reportRemovedNodes(string $file, array $nodes)
+    private function reportRemovedNodes(string $file, array $nodes): void
     {
         foreach ($nodes as $node) {
             switch (true) {
@@ -360,15 +363,14 @@ class Analyzer implements AnalyzerInterface
         }
     }
 
-    /**
-     * @param string|null $baseDir
-     * @param string $sectionId
-     * @param string $groupId
-     * @param string $fieldId
-     * @param string $afterFile
-     * @return array
-     * @throws \Exception
-     */
+  /**
+   * @param string|null $baseDir
+   * @param string $sectionId
+   * @param string $groupId
+   * @param string|null $fieldId
+   * @param string $afterFile
+   * @return array
+   */
     private function isDuplicatedFieldInXml(
         ?string $baseDir,
         string $sectionId,
@@ -406,7 +408,6 @@ class Analyzer implements AnalyzerInterface
                     [
                         'status' => 'duplicate',
                         'field'  => $fieldId
-
                     ]
                 ];
             }
