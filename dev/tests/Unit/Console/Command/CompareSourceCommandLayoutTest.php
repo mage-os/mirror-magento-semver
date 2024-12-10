@@ -42,7 +42,7 @@ class CompareSourceCommandLayoutTest extends AbstractTestCaseWithRegExp
         );
     }
 
-    public function changesDataProvider()
+    public static function changesDataProvider()
     {
         $pathToFixtures = __DIR__ . '/CompareSourceCommandTest/_files/layout_xml';
         getcwd();

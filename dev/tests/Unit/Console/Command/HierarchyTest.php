@@ -39,7 +39,7 @@ class HierarchyTest extends AbstractTestCase
         );
     }
 
-    public function changesDataProvider()
+    public static function changesDataProvider()
     {
         $pathToFixtures = __DIR__ . '/HierarchyTest/_files';
         return [

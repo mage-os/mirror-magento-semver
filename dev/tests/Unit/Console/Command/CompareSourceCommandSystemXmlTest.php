@@ -42,7 +42,7 @@ class CompareSourceCommandSystemXmlTest extends AbstractTestCase
         );
     }
 
-    public function changesDataProvider()
+    public static function changesDataProvider()
     {
         $pathToFixtures = __DIR__ . '/CompareSourceCommandTest/_files/system_xml';
 
