@@ -144,7 +144,7 @@ class Analyzer implements AnalyzerInterface
      * @param string $filePath
      * @return string|null
      */
-    private function getBaseDir($filePath): ?string
+    private function getBaseDir(string $filePath): ?string
     {
         $currentDir = dirname($filePath);
         while ($currentDir !== '/' && $currentDir !== false) {
