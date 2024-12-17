@@ -157,14 +157,14 @@ class Analyzer implements AnalyzerInterface
         return null;
     }
 
-    /**
-     * Search for system.xml files in both app/code and vendor directories, excluding the provided file.
-     *
-     * @param string $magentoBaseDir The base directory of Magento.
-     * @param string $excludeFile The file to exclude from the search.
-     * @return array An array of paths to system.xml files, excluding the specified file.
-     */
-    private function getSystemXmlFiles($magentoBaseDir, $excludeFile = null): array
+  /**
+   * Search for system.xml files in both app/code and vendor directories, excluding the provided file.
+   *
+   * @param string $magentoBaseDir The base directory of Magento.
+   * @param string|null $excludeFile The file to exclude from the search.
+   * @return array An array of paths to system.xml files, excluding the specified file.
+   */
+    private function getSystemXmlFiles(string $magentoBaseDir, ?string $excludeFile = null): array
     {
         $systemXmlFiles = [];
         $directoryToSearch = [
@@ -189,13 +189,13 @@ class Analyzer implements AnalyzerInterface
         return $systemXmlFiles;
     }
 
-    /**
-     * Method to extract section, group and field from the Node
-     *
-     * @param $nodePath
-     * @return array|null
-     */
-    private function extractSectionGroupField($nodePath): ?array
+  /**
+   * Method to extract section, group and field from the Node
+   *
+   * @param string $nodePath
+   * @return array|null
+   */
+    private function extractSectionGroupField(string $nodePath): ?array
     {
         $parts = explode('/', $nodePath);
 
@@ -211,14 +211,14 @@ class Analyzer implements AnalyzerInterface
         return [$sectionId, $groupId, $fieldId];
     }
 
-    /**
-     * Method to get Node Data using reflection class
-     *
-     * @param $node
-     * @return array
-     * @throws \ReflectionException
-     */
-    private function getNodeData($node): array
+  /**
+   * Method to get Node Data using reflection class
+   *
+   * @param object|string $node
+   * @return array
+   * @throws \ReflectionException
+   */
+    private function getNodeData(object|string $node): array
     {
         $data = [];
 
