@@ -59,10 +59,10 @@ class CompareSourceCommandApiClassesTest extends AbstractTestCase
                 $pathToFixtures . '/new-method/source-code-before',
                 $pathToFixtures . '/new-method/source-code-after',
                 [
-                    'Class (PATCH)',
+                    'Class (MINOR)',
                     'Test\Vcs\TestClass::testMethod | [public] Method has been added. | V015'
                 ],
-                'Patch change is detected.'
+                'Minor change is detected.'
             ],
             'api-class-removed-class' => [
                 $pathToFixtures . '/removed-class/source-code-before',
