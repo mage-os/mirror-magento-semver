@@ -98,7 +98,7 @@ class CompareSourceCommandLessTest extends AbstractTestCaseWithRegExp
                 $pathToFixtures . '/removed-import/source-code-after',
                 [
                     '/Less \(MAJOR\)/',
-                    '/view\/frontend\/web\/css\/source\/test.less:0\s*\|\s*Import with value: \'testimport\'\s*\|\s*A less import-node was removed\s*\|\s*M402/'
+                    '/view\/frontend\/web\/css\/source\/test.less:0\s*\|\s*Less_Tree_Import\s*\|\s*A less import-node was removed\s*\|\s*M402/'
                 ],
                 'Major change is detected.',
             ],
@@ -107,8 +107,8 @@ class CompareSourceCommandLessTest extends AbstractTestCaseWithRegExp
                 $pathToFixtures . '/removed-imports/source-code-after',
                 [
                     '/Less \(MAJOR\)/',
-                    '/view\/frontend\/web\/css\/source\/test.less:0\s*\|\s*Import with value: \'testimport\'\s*\|\s*A less import-node was removed\s*\|\s*M402/',
-                    '/view\/frontend\/web\/css\/source\/test.less:0\s*\|\s*Import with value: \'testimport2\'\s*\|\s*A less import-node was removed\s*\|\s*M402/'
+                    '/view\/frontend\/web\/css\/source\/test.less:0\s*\|\s*Less_Tree_Import\s*\|\s*A less import-node was removed\s*\|\s*M402/',
+                    '/view\/frontend\/web\/css\/source\/test.less:0\s*\|\s*Less_Tree_Import\s*\|\s*A less import-node was removed\s*\|\s*M402/'
                 ],
                 'Major change is detected.',
             ],

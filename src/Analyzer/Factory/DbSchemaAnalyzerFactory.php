@@ -30,7 +30,7 @@ class DbSchemaAnalyzerFactory implements AnalyzerFactoryInterface
      * @param DependencyGraph|null $dependencyGraph
      * @return AnalyzerInterface
      */
-    public function create(DependencyGraph $dependencyGraph = null): AnalyzerInterface
+    public function create(?DependencyGraph $dependencyGraph = null): AnalyzerInterface
     {
         $report = new Report();
         $analyzers = [

@@ -51,7 +51,7 @@ abstract class AbstractCodeAnalyzer implements AnalyzerInterface
         $context = null,
         $fileBefore = null,
         $fileAfter = null,
-        DependencyGraph $dependencyGraph = null
+        ?DependencyGraph $dependencyGraph = null
     ) {
         $this->context = $context;
         $this->fileBefore = $fileBefore;
