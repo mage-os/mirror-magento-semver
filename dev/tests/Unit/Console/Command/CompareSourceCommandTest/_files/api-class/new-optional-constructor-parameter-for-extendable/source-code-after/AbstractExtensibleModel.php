@@ -11,7 +11,7 @@ namespace Magento\Framework\Model;
  */
 class AbstractExtensibleModel
 {
-    public function __construct(\Test\Vcs\TestInterface $a, \Test\Vcs\TestInterface $b = null)
+    public function __construct(\Test\Vcs\TestInterface $a, ?\Test\Vcs\TestInterface $b = null)
     {
     }
 }

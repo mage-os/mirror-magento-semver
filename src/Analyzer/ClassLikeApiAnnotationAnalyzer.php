@@ -35,7 +35,7 @@ class ClassLikeApiAnnotationAnalyzer extends AbstractCodeAnalyzer
         $context = null,
         $fileBefore = null,
         $fileAfter = null,
-        DependencyGraph $dependencyGraph = null
+        ?DependencyGraph $dependencyGraph = null
     ) {
         parent::__construct($context, $fileBefore, $fileAfter, $dependencyGraph);
         $this->nodeHelper = new Node();

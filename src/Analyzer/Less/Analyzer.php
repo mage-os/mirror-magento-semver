@@ -20,7 +20,7 @@ use PHPSemVerChecker\Registry\Registry;
 use PHPSemVerChecker\Report\Report;
 use Less_Tree;
 use Less_Tree_Comment;
-use Less_Tree_Rule;
+use Less_Tree_Declaration;
 use Less_Tree_Mixin_Definition;
 use Less_Tree_Import;
 
@@ -152,7 +152,7 @@ class Analyzer implements AnalyzerInterface
     {
         foreach ($nodes as $nodeName => $node) {
             switch (true) {
-                case $node instanceof Less_Tree_Rule:
+                case $node instanceof Less_Tree_Declaration:
                     $this->report->add(self::CONTEXT, new VariableRemoved($file, $nodeName));
                     break;
                 case $node instanceof Less_Tree_Mixin_Definition:

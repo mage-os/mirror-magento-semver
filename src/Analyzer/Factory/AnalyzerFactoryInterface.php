@@ -21,5 +21,5 @@ interface AnalyzerFactoryInterface
      * @param DependencyGraph|null $dependencyGraph
      * @return AnalyzerInterface
      */
-    public function create(DependencyGraph $dependencyGraph = null): AnalyzerInterface;
+    public function create(?DependencyGraph $dependencyGraph = null): AnalyzerInterface;
 }

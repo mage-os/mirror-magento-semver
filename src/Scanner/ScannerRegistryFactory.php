@@ -55,8 +55,8 @@ class ScannerRegistryFactory
      * @return Scanner
      */
     private function buildApiScanner(
-        DependencyGraph $dependencyGraph = null,
-        DependencyGraph $dependencyGraphCompare = null
+        ?DependencyGraph $dependencyGraph = null,
+        ?DependencyGraph $dependencyGraphCompare = null
     ) {
         $registry    = new Registry();
         $parser      = new Parser(new Emulative());
@@ -80,7 +80,7 @@ class ScannerRegistryFactory
      * @param boolean              $mftf
      * @return array
      */
-    public function create(DependencyGraph $dependencyGraph = null, DependencyGraph $dependencyGraphCompare = null)
+    public function create(?DependencyGraph $dependencyGraph = null, ?DependencyGraph $dependencyGraphCompare = null)
     {
         $moduleNameResolver = new ModuleNamespaceResolver();
 

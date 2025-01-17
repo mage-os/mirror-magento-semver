@@ -22,7 +22,7 @@ use Magento\SemanticVersionChecker\DbSchemaReport;
  */
 class EtSchemaAnalyzerFactory implements AnalyzerFactoryInterface
 {
-    public function create(DependencyGraph $dependencyGraph = null): AnalyzerInterface
+    public function create(?DependencyGraph $dependencyGraph = null): AnalyzerInterface
     {
         $report = new DbSchemaReport();
         $analyzers = [

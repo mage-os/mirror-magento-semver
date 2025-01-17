@@ -40,8 +40,8 @@ abstract class AbstractApiVisitor extends NodeVisitorAbstract
     public function __construct(
         Registry $registry,
         NodeHelper $nodeHelper,
-        DependencyGraph $dependencyGraph = null,
-        DependencyGraph $dependencyGraphCompare = null
+        ?DependencyGraph $dependencyGraph = null,
+        ?DependencyGraph $dependencyGraphCompare = null
     ) {
         $this->dependencyGraph        = $dependencyGraph;
         $this->dependencyGraphComapre = $dependencyGraphCompare;
